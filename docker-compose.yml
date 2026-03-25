@@ -1,14 +1,28 @@
 services:
-  stats-server:
+  discovery-server:
+    build: infra/discovery-server
+    container_name: discovery-server
     ports:
-      - "9090:9090"
-
-  stats-db:
-    image: postgres:16.1
-
-  ewm-service:
+      - "8761:8761"
+    networks:
+      - ewm-net
+    healthcheck:
+      test: "curl --fail --silent discovery-server:8761/actuator/health | grep UP || exit 1"
+      timeout: 5s
+      interval: 20s
+      retries: 5
+  postgres:
+    image: postgres:17
+    container_name: analyzer-postgres
+    restart: unless-stopped
     ports:
-      - "8080:8080"
-
-  ewm-db:
-    image: postgres:16.1
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
