@@ -4,25 +4,125 @@ services:
     container_name: discovery-server
     ports:
       - "8761:8761"
-    networks:
-      - ewm-net
     healthcheck:
-      test: "curl --fail --silent discovery-server:8761/actuator/health | grep UP || exit 1"
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8761/actuator/health | grep UP || exit 1"]
       timeout: 5s
       interval: 20s
       retries: 5
-  postgres:
-    image: postgres:17
-    container_name: analyzer-postgres
-    restart: unless-stopped
+      start_period: 30s
+
+  config-server:
+    build: infra/config-server
+    container_name: config-server
     ports:
-      - "5432:5432"
+      - "8888:8888"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8888/actuator/health | grep UP || exit 1"]
+      timeout: 5s
+      interval: 20s
+      retries: 5
+      start_period: 40s
+
+  stats-db:
+    image: postgres:16.1
+    container_name: postgres-stat
+    ports:
+      - "6642:5432"
+    environment:
+      - POSTGRES_PASSWORD=stat
+      - POSTGRES_USER=stat
+      - POSTGRES_DB=stat
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      timeout: 5s
       interval: 5s
-      timeout: 3s
       retries: 10
+
+  stats-server:
+    build: stats/stats-server
+    image: stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      stats-db:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stat
+      - SPRING_DATASOURCE_USERNAME=stat
+      - SPRING_DATASOURCE_PASSWORD=stat
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9090/actuator/health | grep UP || exit 1"]
+      timeout: 30s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+
+  ewm-db:
+    image: postgres:16.1
+    container_name: postgres-main
+    ports:
+      - "6641:5432"
+    environment:
+      - POSTGRES_PASSWORD=main
+      - POSTGRES_USER=main
+      - POSTGRES_DB=main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  ewm-service:
+    build: core/main-service
+    image: main-server
+    container_name: main-server
+#    ports:
+#      - "8081:8080"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      ewm-db:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/main
+      - SPRING_DATASOURCE_USERNAME=main
+      - SPRING_DATASOURCE_PASSWORD=main
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8081/actuator/health | grep UP || exit 1"]
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+
+  gateway-server:
+    build: infra/gateway-server
+    container_name: gateway-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health | grep UP || exit 1"]
+      timeout: 30s
+      interval: 30s
+      retries: 3
+      start_period: 40s
