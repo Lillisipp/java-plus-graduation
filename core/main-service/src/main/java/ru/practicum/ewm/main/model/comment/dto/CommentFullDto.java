@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Setter
 @Data
 @Builder
+@AllArgsConstructor
 public class CommentFullDto {
     private Long id;
     private Long eventId;
