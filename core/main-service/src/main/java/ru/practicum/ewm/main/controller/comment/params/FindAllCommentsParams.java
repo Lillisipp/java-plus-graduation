@@ -1,6 +1,9 @@
 package ru.practicum.ewm.main.controller.comment.params;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
