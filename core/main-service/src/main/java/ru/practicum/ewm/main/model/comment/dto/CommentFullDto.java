@@ -1,13 +1,11 @@
 package ru.practicum.ewm.main.model.comment.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 
+@RequiredArgsConstructor
 @Getter
 @Setter
 @Data
