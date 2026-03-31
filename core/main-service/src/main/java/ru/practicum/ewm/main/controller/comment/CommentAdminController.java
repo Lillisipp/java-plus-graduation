@@ -34,8 +34,8 @@ public class CommentAdminController {
             @RequestParam(required = false) CommentStatus status,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") Long from,
+            @RequestParam(defaultValue = "10") Long size,
             @RequestParam(defaultValue = "desc") String sort) {
         log.info("Admin: запрос на получение комментариев");
 

@@ -23,9 +23,9 @@ public class FindAllCommentsParams {
 
     LocalDateTime rangeEnd;
 
-    int from;
+    Long from;
 
-    int size;
+    Long size;
 
     String sort;
 }
