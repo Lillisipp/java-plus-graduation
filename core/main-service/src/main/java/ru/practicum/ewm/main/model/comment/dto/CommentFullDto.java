@@ -1,21 +1,22 @@
 package ru.practicum.ewm.main.model.comment.dto;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.FieldDefaults;
+import lombok.Getter;
+import lombok.Setter;
 import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Data
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentFullDto {
-    Long id;
-    Long eventId;
-    Long authorId;
-    String text;
-    LocalDateTime createdOn;
-    CommentStatus status;
+    private Long id;
+    private Long eventId;
+    private Long authorId;
+    private String text;
+    private LocalDateTime createdOn;
+    private CommentStatus status;
 }

@@ -1,31 +1,29 @@
 package ru.practicum.ewm.main.controller.comment.params;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 
-@Data
-@Builder
-@AllArgsConstructor
 @RequiredArgsConstructor
+@Getter
+@Builder
 public class FindAllCommentsParams {
-    Long eventId;
+    private Long eventId;
 
-    Long userId;
+    private Long userId;
 
-    CommentStatus status;
+    private CommentStatus status;
 
-    LocalDateTime rangeStart;
+    private LocalDateTime rangeStart;
 
-    LocalDateTime rangeEnd;
+    private LocalDateTime rangeEnd;
 
-    Long from;
+    private Long from;
 
-    Long size;
+    private Long size;
 
-    String sort;
+    private String sort;
 }

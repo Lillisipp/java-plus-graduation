@@ -31,10 +31,11 @@ public class CompilationAdminController {
         return ResponseEntity.ok(result);
     }
 
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{compId}")
     public void delete(@PathVariable Long compId) {
         compilationService.delete(compId);
-        ResponseEntity.status(HttpStatus.NO_CONTENT).body("Подборка удалена");
     }
 
 }
