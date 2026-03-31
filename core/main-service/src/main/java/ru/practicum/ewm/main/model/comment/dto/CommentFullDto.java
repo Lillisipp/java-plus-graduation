@@ -5,11 +5,10 @@ import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 
-@RequiredArgsConstructor
 @Getter
 @Setter
-@Data
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class CommentFullDto {
     private Long id;

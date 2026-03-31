@@ -5,7 +5,6 @@ import ru.practicum.ewm.main.model.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 
-@RequiredArgsConstructor
 @Getter
 @Builder
 @NoArgsConstructor
