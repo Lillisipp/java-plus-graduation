@@ -32,9 +32,9 @@ public class CompilationAdminController {
     }
 
     @DeleteMapping("/{compId}")
-    public ResponseEntity<String> delete(@PathVariable Long compId) {
+    public void delete(@PathVariable Long compId) {
         compilationService.delete(compId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Подборка удалена");
+        ResponseEntity.status(HttpStatus.NO_CONTENT).body("Подборка удалена");
     }
 
 }
