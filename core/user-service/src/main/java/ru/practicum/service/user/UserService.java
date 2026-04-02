@@ -1,8 +1,9 @@
-package ru.practicum.ewm.main.service.user;
+package ru.practicum.service.user;
 
-import ru.practicum.ewm.main.model.user.NewUserRequest;
-import ru.practicum.ewm.main.model.user.User;
-import ru.practicum.ewm.main.model.user.UserDto;
+
+import ru.practicum.dto.user.NewUserRequest;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.model.user.User;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package ru.practicum.ewm.main.mapper.user;
+package ru.practicum.mapper.user;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -1,12 +1,12 @@
-package ru.practicum.ewm.main.service.user;
+package ru.practicum.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.exception.ConflictException;
+import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.mapper.user.UserMapper;
 import ru.practicum.ewm.main.model.user.NewUserRequest;
 import ru.practicum.ewm.main.model.user.User;
