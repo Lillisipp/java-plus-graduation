@@ -28,8 +28,6 @@ CREATE TABLE IF NOT EXISTS events(
     CONSTRAINT fk_events_categories
         FOREIGN KEY(category_id) REFERENCES categories(id)
         ON DELETE RESTRICT,
-    CONSTRAINT fk_events_users
-        FOREIGN KEY(initiator_id) REFERENCES users(id),
     CONSTRAINT fk_events_locations
         FOREIGN KEY(location_id) REFERENCES locations(id)
 );
@@ -55,8 +53,7 @@ CREATE TABLE IF NOT EXISTS requests(
     requester_id BIGINT NOT NULL,
     status VARCHAR(10) NOT NULL,
 
-    CONSTRAINT fk_requests_events FOREIGN KEY(event_id) REFERENCES events(id),
-    CONSTRAINT fk_requests_users FOREIGN KEY(requester_id) REFERENCES users(id)
+    CONSTRAINT fk_requests_events FOREIGN KEY(event_id) REFERENCES events(id)
 );
 
 CREATE TABLE IF NOT EXISTS comments(
@@ -68,7 +65,5 @@ CREATE TABLE IF NOT EXISTS comments(
     status VARCHAR(32) NOT NULL,
 
     CONSTRAINT fk_comments_events
-        FOREIGN KEY(event_id) REFERENCES events(id),
-    CONSTRAINT fk_comments_users
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        FOREIGN KEY(event_id) REFERENCES events(id)
 );

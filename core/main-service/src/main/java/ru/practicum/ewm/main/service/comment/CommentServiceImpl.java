@@ -17,10 +17,10 @@ import ru.practicum.ewm.main.model.comment.dto.CommentShortDto;
 import ru.practicum.ewm.main.model.comment.dto.NewCommentRequest;
 import ru.practicum.ewm.main.model.events.Events;
 import ru.practicum.ewm.main.model.events.enums.EventState;
-import ru.practicum.ewm.main.model.user.User;
 import ru.practicum.ewm.main.repository.comment.CommentRepository;
 import ru.practicum.ewm.main.repository.events.EventsRepository;
-import ru.practicum.ewm.main.repository.user.UserRepository;
+import ru.practicum.model.user.User;
+import ru.practicum.repository.user.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;

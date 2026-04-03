@@ -38,7 +38,7 @@ spring:
             - Path=/admin/events/**
 
         - id: admin_user_service_route
-          uri: lb://main-service
+          uri: lb://user-server
           predicates:
             - Path=/admin/users/**
 
@@ -76,7 +76,7 @@ spring:
         - id: main-service-route
           uri: lb://main-service
           predicates:
-            - Path=/users/**,/categories/**,/admin/**,/compilations/**,/events/**
+            - Path=/users/**,/categories/**,/admin/events/**,/admin/categories/**,/admin/compilations/**,/compilations/**,/events/**
 
         - id: stats-service-route
           uri: lb://stats-server

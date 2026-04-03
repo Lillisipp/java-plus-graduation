@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.main.model.events.Events;
-import ru.practicum.ewm.main.model.user.User;
+import ru.practicum.model.user.User;
 
 import java.time.LocalDateTime;
 

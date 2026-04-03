@@ -5,13 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.main.exception.ConflictException;
-import ru.practicum.ewm.main.exception.NotFoundException;
-import ru.practicum.ewm.main.mapper.user.UserMapper;
-import ru.practicum.ewm.main.model.user.NewUserRequest;
-import ru.practicum.ewm.main.model.user.User;
-import ru.practicum.ewm.main.model.user.UserDto;
-import ru.practicum.ewm.main.repository.user.UserRepository;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
+import ru.practicum.mapper.user.UserMapper;
+import ru.practicum.dto.user.NewUserRequest;
+import ru.practicum.model.user.User;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.repository.user.UserRepository;
 
 import java.util.List;
 

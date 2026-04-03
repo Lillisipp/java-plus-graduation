@@ -23,14 +23,14 @@ import ru.practicum.ewm.main.model.events.enums.StateActionUserUpdateEvent;
 import ru.practicum.ewm.main.model.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.main.model.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.main.model.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.main.model.user.User;
 import ru.practicum.ewm.main.repository.events.EventsRepository;
 import ru.practicum.ewm.main.service.category.CategoryService;
 import ru.practicum.ewm.main.service.events.EventAuthorizedService;
 import ru.practicum.ewm.main.service.location.LocationService;
 import ru.practicum.ewm.main.service.request.ParticipationRequestService;
 import ru.practicum.ewm.main.service.request.ParticipationRequestValidator;
-import ru.practicum.ewm.main.service.user.UserService;
+import ru.practicum.model.user.User;
+import ru.practicum.service.user.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -120,15 +120,17 @@ services:
       retries: 10
 
   user-service:
-    build: core/user-server
+    build: core/user-service
     container_name: user-service
+    ports:
+      - "8081:8081"
     depends_on:
+      discovery-server:
+        condition: service_healthy
       user-db:
         condition: service_healthy
       config-server:
         condition: service_healthy
-    networks:
-      - ewm-net
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/user-server
       - SPRING_DATASOURCE_USERNAME=root
@@ -144,8 +146,6 @@ services:
   user-db:
     image: postgres:16.1
     container_name: postgres-ewm-user-db
-    networks:
-      - ewm-net
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
@@ -164,8 +164,6 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-    networks:
-      - ewm-net
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://request-db:5432/request-server
       - SPRING_DATASOURCE_USERNAME=root
@@ -181,8 +179,6 @@ services:
   request-db:
     image: postgres:16.1
     container_name: postgres-ewm-request-db
-    networks:
-      - ewm-net
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
@@ -201,8 +197,6 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-    networks:
-      - ewm-net
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://event-db:5432/event-server
       - SPRING_DATASOURCE_USERNAME=root
@@ -218,8 +212,6 @@ services:
   event-db:
     image: postgres:16.1
     container_name: postgres-ewm-event-db
-    networks:
-      - ewm-net
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root

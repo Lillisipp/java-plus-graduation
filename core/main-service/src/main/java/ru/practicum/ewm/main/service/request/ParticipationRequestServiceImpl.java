@@ -12,10 +12,10 @@ import ru.practicum.ewm.main.model.request.ParticipationRequest;
 import ru.practicum.ewm.main.model.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.main.model.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.main.model.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.main.model.user.User;
 import ru.practicum.ewm.main.repository.events.EventsRepository;
 import ru.practicum.ewm.main.repository.request.ParticipationRequestRepository;
-import ru.practicum.ewm.main.service.user.UserService;
+import ru.practicum.model.user.User;
+import ru.practicum.service.user.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
