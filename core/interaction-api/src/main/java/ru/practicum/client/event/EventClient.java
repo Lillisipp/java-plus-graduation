@@ -8,7 +8,7 @@ import ru.practicum.dto.event.
 
         EventFullDto;
 
-@FeignClient(name = "event-server")
+@FeignClient(name = "event-service")
 public interface EventClient {
 
     @GetMapping("/admin/events/{eventId}/existence/{initiatorId}")

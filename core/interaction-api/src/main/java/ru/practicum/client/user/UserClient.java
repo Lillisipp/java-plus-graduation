@@ -9,7 +9,7 @@ import ru.practicum.dto.user.UserDto;
 
 import java.util.List;
 
-@FeignClient(name = "user-server")
+@FeignClient(name = "user-service")
 public interface UserClient {
     @PostMapping("/admin/users")
     @ResponseStatus(HttpStatus.CREATED)

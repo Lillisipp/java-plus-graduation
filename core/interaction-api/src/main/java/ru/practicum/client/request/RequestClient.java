@@ -8,7 +8,7 @@ import ru.practicum.dto.request.ParticipationRequestDto;
 import java.util.List;
 import java.util.Set;
 
-@FeignClient(name = "request-server")
+@FeignClient(name = "request-service")
 public interface RequestClient {
     @GetMapping("/users/{userId}/requests")
     List<ParticipationRequestDto> findAllRequestsByUserId(@PathVariable Long userId);

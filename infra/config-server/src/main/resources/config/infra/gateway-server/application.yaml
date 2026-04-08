@@ -13,81 +13,81 @@ spring:
       routes:
         # === Request Service ===
         - id: request_service_route
-          uri: lb://request-server
+          uri: lb://request-service
           predicates:
             - Path=/users/{userId}/requests/**
 
         # === Event Service: user events ===
         - id: private_event_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/users/{userId}/events/**
 
         # === Comment Service: write ===
         - id: private_comment_service_route
-          uri: lb://comment-server
+          uri: lb://comment-service
           predicates:
             - Method=POST,PATCH,DELETE
             - Path=/events/{eventId}/comments/**
 
         # === Comment Service: user comments ===
         - id: user_comment_service_route
-          uri: lb://comment-server
+          uri: lb://comment-service
           predicates:
             - Path=/users/{userId}/comments/**
 
         # === Comment Service: admin ===
         - id: admin_comment_service_route
-          uri: lb://comment-server
+          uri: lb://comment-service
           predicates:
             - Path=/admin/comments/**
 
         # === Event Service: admin events ===
         - id: admin_event_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/admin/events/**
 
         # === User Service: admin users ===
         - id: admin_user_service_route
-          uri: lb://user-server
+          uri: lb://user-service
           predicates:
             - Path=/admin/users/**
 
         # === Event Service: admin categories ===
         - id: admin_category_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/admin/categories/**
 
         # === Event Service: admin compilations ===
         - id: admin_compilation_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/admin/compilations/**
 
         # === Comment Service: public read ===
         - id: public_comment_service_route
-          uri: lb://comment-server
+          uri: lb://comment-service
           predicates:
             - Method=GET
             - Path=/events/{eventId}/comments/**
 
         # === Event Service: public events ===
         - id: public_event_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/events/**
 
         # === Event Service: public categories ===
         - id: public_category_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/categories/**
 
         # === Event Service: public compilations ===
         - id: public_compilation_service_route
-          uri: lb://event-server
+          uri: lb://event-service
           predicates:
             - Path=/compilations/**
 
