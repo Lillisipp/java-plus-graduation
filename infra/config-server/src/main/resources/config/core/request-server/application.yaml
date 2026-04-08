@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 8084
 spring:
   jpa:
     hibernate:
@@ -8,6 +8,7 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+    defer-datasource-initialization: true
   sql:
     init:
       mode: always
