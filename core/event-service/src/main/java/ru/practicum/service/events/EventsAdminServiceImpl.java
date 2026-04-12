@@ -105,6 +105,22 @@ public class EventsAdminServiceImpl implements EventsAdminService {
         return dto;
     }
 
+    @Override
+    public EventFullDto findEventById(Long eventId) {
+        Events event = eventsRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found"));
+        EventFullDto dto = mapper.toFullDto(event);
+        dto.setInitiator(getUserShort(event.getInitiatorId()));
+        try {
+            long confirmed = requestClient.findAllRequestsByEventIdAndStatus(
+                    event.getId(), ParticipationRequestStatus.CONFIRMED.name()).size();
+            dto.setConfirmedRequests(confirmed);
+        } catch (Exception ex) {
+            dto.setConfirmedRequests(0L);
+        }
+        return dto;
+    }
+
     private UserShortDto getUserShort(Long userId) {
         try {
             List<UserDto> users = userClient.find(List.of(userId), 0, 1);

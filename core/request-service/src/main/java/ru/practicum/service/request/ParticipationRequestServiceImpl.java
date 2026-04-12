@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.event.EventClient;
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.enums.request.ParticipationRequestStatus;
 import ru.practicum.exception.ConflictException;
@@ -23,16 +25,53 @@ import java.util.Set;
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
 
     private final ParticipationRequestRepository requestRepository;
+    private final EventClient eventClient;
 
     @Override
     @Transactional
     public ParticipationRequestDto add(Long userId, Long eventId) {
+        // проверка на повторный запрос
+        requestRepository.findByRequesterIdAndEventId(userId, eventId)
+                .ifPresent(r -> {
+                    log.warn("Попытка добавить повторный запрос: requesterId={}, eventId={}", userId, eventId);
+                    throw new ConflictException("нельзя добавить повторный запрос");
+                });
+
+        EventFullDto event = eventClient.findEventById(eventId);
+
+
+        if (event.getInitiator() != null && userId.equals(event.getInitiator().id())) {
+            log.warn("Инициатор пытается подать запрос на своё событие: userId={}, eventId={}", userId, eventId);
+            throw new ConflictException("инициатор события не может добавить запрос на участие в своём событии");
+        }
+
+        if (event.getPublishedOn() == null) {
+            log.warn("Попытка подать заявку на неопубликованное событие: eventId={}, requesterId={}", eventId, userId);
+            throw new ConflictException("нельзя участвовать в неопубликованном событии");
+        }
+
+        long limit = event.getParticipantLimit() == null ? 0L : event.getParticipantLimit();
+        if (limit != 0L) {
+            long confirmedCount = requestRepository.countByEventIdAndStatus(
+                    eventId, ParticipationRequestStatus.CONFIRMED);
+            if (confirmedCount >= limit) {
+                log.warn("Достигнут лимит участников: eventId={}, limit={}, confirmed={}", eventId, limit, confirmedCount);
+                throw new ConflictException("достигнут лимит запросов на участие");
+            }
+        }
+
         ParticipationRequest request = ParticipationRequest.builder()
                 .created(LocalDateTime.now())
                 .eventId(eventId)
                 .requesterId(userId)
                 .status(ParticipationRequestStatus.PENDING)
                 .build();
+
+        // авто-подтверждение если модерация отключена или нет лимита
+        if (Boolean.FALSE.equals(event.getRequestModeration()) || limit == 0) {
+            request.setStatus(ParticipationRequestStatus.CONFIRMED);
+            log.debug("Премодерация отключена либо нет лимита, заявка CONFIRMED: eventId={}, requesterId={}", eventId, userId);
+        }
 
         ParticipationRequest saved = requestRepository.save(request);
         log.info("Запрос на участие создан: requestId={}, requesterId={}, eventId={}",
