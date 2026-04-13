@@ -65,12 +65,19 @@ public class EventPublicServiceImpl implements EventPublicService {
                 .toList();
         Map<String, Long> viewsByUri = getViewsForUris(uris);
 
+        List<Long> initiatorIds = events.stream()
+                .map(Events::getInitiatorId)
+                .distinct()
+                .toList();
+        Map<Long, UserShortDto> initiatorsByIds = getUsersShortByIds(initiatorIds);
+
         return events.stream()
                 .map(e -> {
                     EventShortDto dto = eventsMapper.toShortDto(e);
                     String uri = "/events/" + e.getId();
                     long views = viewsByUri.getOrDefault(uri, 0L);
-                    UserShortDto initiator = getUserShort(e.getInitiatorId());
+                    UserShortDto initiator = initiatorsByIds.getOrDefault(e.getInitiatorId(),
+                            new UserShortDto(e.getInitiatorId(), "Unknown"));
                     return new EventShortDto(
                             dto.id(),
                             dto.title(),
@@ -100,6 +107,20 @@ public class EventPublicServiceImpl implements EventPublicService {
         dto.setConfirmedRequests(getConfirmedCount(eventId));
         dto.setViews(views);
         return dto;
+    }
+
+    private Map<Long, UserShortDto> getUsersShortByIds(List<Long> userIds) {
+        try {
+            List<UserDto> users = userClient.find(userIds, 0, userIds.size());
+            Map<Long, UserShortDto> result = new HashMap<>();
+            for (UserDto user : users) {
+                result.put(user.getId(), new UserShortDto(user.getId(), user.getName()));
+            }
+            return result;
+        } catch (Exception e) {
+            log.warn("Не удалось получить пользователей ids={}: {}", userIds, e.getMessage());
+            return Map.of();
+        }
     }
 
     private UserShortDto getUserShort(Long userId) {

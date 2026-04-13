@@ -68,7 +68,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .build();
 
         // авто-подтверждение если модерация отключена или нет лимита
-        if (Boolean.FALSE.equals(event.getRequestModeration()) || limit == 0) {
+        if (Boolean.FALSE.equals(event.getRequestModeration())
+                || (event.getParticipantLimit() != null && event.getParticipantLimit() == 0)) {
             request.setStatus(ParticipationRequestStatus.CONFIRMED);
             log.debug("Премодерация отключена либо нет лимита, заявка CONFIRMED: eventId={}, requesterId={}", eventId, userId);
         }
