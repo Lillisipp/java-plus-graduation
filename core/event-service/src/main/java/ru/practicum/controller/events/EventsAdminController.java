@@ -1,0 +1,40 @@
+package ru.practicum.controller.events;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.UpdateEventAdminRequest;
+import ru.practicum.model.params.AdminEventSearchParams;
+import ru.practicum.service.events.EventsAdminService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/admin/events")
+@RequiredArgsConstructor
+@Slf4j
+public class EventsAdminController {
+
+    private final EventsAdminService eventsAdminService;
+
+    @GetMapping
+    public List<EventFullDto> getEvents(@Valid @ModelAttribute AdminEventSearchParams params) {
+        log.info("GET /admin/events params={}", params);
+        return eventsAdminService.getEvents(params);
+    }
+
+    @GetMapping("/{eventId}")
+    public EventFullDto findEventById(@PathVariable Long eventId) {
+        log.info("GET /admin/events/{}", eventId);
+        return eventsAdminService.findEventById(eventId);
+    }
+
+    @PatchMapping("/{eventId}")
+    public EventFullDto updateEvent(@PathVariable Long eventId,
+                                    @Valid @RequestBody UpdateEventAdminRequest updateRequest) {
+        log.info("PATCH /admin/events/{} body={}", eventId, updateRequest);
+        return eventsAdminService.updateEvent(eventId, updateRequest);
+    }
+}

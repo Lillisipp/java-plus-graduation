@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS comments(
+    id BIGSERIAL PRIMARY KEY,
+    event_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    comment_text VARCHAR(512),
+    created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    status VARCHAR(32) NOT NULL
+);
