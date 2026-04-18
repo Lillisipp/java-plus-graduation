@@ -26,7 +26,8 @@ public class KafkaProducerConfig {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties());
 
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, GeneralAvroSerializer.class); // [что делает] сериализует Avro-сообщение
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                ru.practicum.ewm.stats.avro.serialization.GeneralAvroSerializer.class);
 
         return new DefaultKafkaProducerFactory<>(props);}
 
