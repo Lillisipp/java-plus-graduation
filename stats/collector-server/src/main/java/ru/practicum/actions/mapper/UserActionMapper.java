@@ -3,12 +3,15 @@ package ru.practicum.actions.mapper;
 import com.google.protobuf.Timestamp;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.ValueMapping;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.UserActionProto;
+
+import java.time.Instant;
 
 @Mapper(
         componentModel = "spring",
@@ -23,12 +26,13 @@ public interface UserActionMapper {
     @ValueMapping(source = "ACTION_VIEW", target = "VIEW")
     @ValueMapping(source = "ACTION_REGISTER", target = "REGISTER")
     @ValueMapping(source = "ACTION_LIKE", target = "LIKE")
+    @ValueMapping(source = MappingConstants.ANY_REMAINING, target = "VIEW")
     ActionTypeAvro mapActionType(ActionTypeProto source);
 
-    default long mapTimestamp(Timestamp source) {
+    default Instant mapTimestamp(Timestamp source) {
         if (source == null) {
-            return 0L;
+            return Instant.EPOCH;
         }
-        return source.getSeconds() * 1000 + source.getNanos() / 1_000_000;
+        return Instant.ofEpochSecond(source.getSeconds(), source.getNanos());
     }
 }

@@ -22,10 +22,10 @@ spring:
     username: analyzer
     password: analyzer
 
-stats:
+analyzer:
   kafka:
-    topic:
-      events-similarity: stats.events-similarity.v1
+    user-actions-topic: stats.user-actions.v1
+    events-similarity-topic: stats.events-similarity.v1
 
 logging:
   level:

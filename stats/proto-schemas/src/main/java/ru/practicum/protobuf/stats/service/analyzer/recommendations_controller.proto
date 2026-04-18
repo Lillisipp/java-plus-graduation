@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package stats.services;
+package stats.service.analyzer;
 
 import "stats/messages/recommendations.proto";
 
