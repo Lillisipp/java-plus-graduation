@@ -319,6 +319,8 @@ services:
   analyzer-server:
     build: stats/analyzer-server
     container_name: analyzer-server
+    ports:
+      - "9093:9093"
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -334,6 +336,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://analyzer-db:5432/analyzer
       - SPRING_DATASOURCE_USERNAME=analyzer
       - SPRING_DATASOURCE_PASSWORD=analyzer
+      - EUREKA_INSTANCE_HOSTNAME=localhost
     networks:
       default:
         aliases:
