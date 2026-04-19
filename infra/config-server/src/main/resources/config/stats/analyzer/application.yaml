@@ -3,7 +3,7 @@ server:
 
 grpc:
   server:
-    port: 9093
+    port: 0
 
 spring:
   kafka:

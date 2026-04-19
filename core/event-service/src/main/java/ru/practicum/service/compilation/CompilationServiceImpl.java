@@ -148,7 +148,7 @@ public class CompilationServiceImpl implements CompilationService {
         UserShortDto initiator = getUserShort(event.getInitiatorId());
         return new EventShortDto(dto.id(), dto.title(), dto.annotation(),
                 dto.category(), initiator, dto.paid(), dto.eventDate(),
-                dto.views(), dto.confirmedRequests());
+                dto.rating(), dto.confirmedRequests());
     }
 
     private UserShortDto getUserShort(Long userId) {

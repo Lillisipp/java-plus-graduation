@@ -1,19 +1,24 @@
 package ru.practicum.service.request;
 
+import com.google.protobuf.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.event.EventClient;
+import ru.practicum.collector.CollectorClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.enums.request.ParticipationRequestStatus;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.request.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.repository.ParticipationRequestRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +31,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     private final ParticipationRequestRepository requestRepository;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
 
     @Override
     @Transactional
@@ -77,7 +83,27 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ParticipationRequest saved = requestRepository.save(request);
         log.info("Запрос на участие создан: requestId={}, requesterId={}, eventId={}",
                 saved.getId(), userId, eventId);
+        sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
         return ParticipationRequestMapper.toDto(saved);
+    }
+
+    private void sendUserAction(Long userId, Long eventId, ActionTypeProto type) {
+        try {
+            Instant now = Instant.now();
+            UserActionProto action = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(type)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(now.getEpochSecond())
+                            .setNanos(now.getNano())
+                            .build())
+                    .build();
+            collectorClient.collectUserAction(action);
+        } catch (Exception e) {
+            log.warn("Не удалось отправить действие userId={}, eventId={}, type={}: {}",
+                    userId, eventId, type, e.getMessage());
+        }
     }
 
     @Override

@@ -1,5 +1,14 @@
 server:
   port: 8084
+
+grpc:
+  client:
+    collector:
+      address: discovery:///collector
+      negotiationType: plaintext
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+
 spring:
   jpa:
     hibernate:

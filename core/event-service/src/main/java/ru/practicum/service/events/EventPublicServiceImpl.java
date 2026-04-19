@@ -1,5 +1,6 @@
 package ru.practicum.service.events;
 
+import com.google.protobuf.Timestamp;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,50 +8,59 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.StatsClient;
+import ru.practicum.analyzer.AnalyzerClient;
 import ru.practicum.client.request.RequestClient;
 import ru.practicum.client.user.UserClient;
+import ru.practicum.collector.CollectorClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.enums.event.EventState;
 import ru.practicum.enums.request.ParticipationRequestStatus;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
-import ru.practicum.ewm.stats.dto.EndpointHitDto;
-import ru.practicum.ewm.stats.dto.ViewStatsDto;
 import ru.practicum.mapper.events.EventsMapper;
 import ru.practicum.model.Events;
 import ru.practicum.model.params.PublicEventSearchParams;
 import ru.practicum.repository.events.EventsRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventPublicServiceImpl implements EventPublicService {
 
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     private final EventsRepository eventsRepository;
     private final EventsMapper eventsMapper;
-    private final StatsClient statsClient;
     private final RequestClient requestClient;
     private final UserClient userClient;
+    private final AnalyzerClient analyzerClient;
+    private final CollectorClient collectorClient;
+
+    // Локальная память просмотров: нужна только для валидации "лайк можно
+    // ставить только на просмотренное". Анализатор такого метода не отдаёт,
+    // а заводить отдельную таблицу ради одной проверки избыточно.
+    private final Map<Long, Set<Long>> viewedByUser = new ConcurrentHashMap<>();
 
     @Override
     public List<EventShortDto> getEvents(PublicEventSearchParams params,
                                          HttpServletRequest request) {
         log.info("Поиск публичных событий params={}", params);
         validateSearchParams(params);
-        saveHit(request);
 
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
         Page<Events> page = eventsRepository.findPublicEvents(params, pageable);
@@ -60,10 +70,8 @@ public class EventPublicServiceImpl implements EventPublicService {
             return List.of();
         }
 
-        List<String> uris = events.stream()
-                .map(e -> "/events/" + e.getId())
-                .toList();
-        Map<String, Long> viewsByUri = getViewsForUris(uris);
+        List<Long> eventIds = events.stream().map(Events::getId).toList();
+        Map<Long, Double> ratingByEventId = getRatings(eventIds);
 
         List<Long> initiatorIds = events.stream()
                 .map(Events::getInitiatorId)
@@ -74,8 +82,6 @@ public class EventPublicServiceImpl implements EventPublicService {
         return events.stream()
                 .map(e -> {
                     EventShortDto dto = eventsMapper.toShortDto(e);
-                    String uri = "/events/" + e.getId();
-                    long views = viewsByUri.getOrDefault(uri, 0L);
                     UserShortDto initiator = initiatorsByIds.getOrDefault(e.getInitiatorId(),
                             new UserShortDto(e.getInitiatorId(), "Unknown"));
                     return new EventShortDto(
@@ -86,7 +92,7 @@ public class EventPublicServiceImpl implements EventPublicService {
                             initiator,
                             dto.paid(),
                             dto.eventDate(),
-                            views,
+                            ratingByEventId.getOrDefault(e.getId(), 0.0),
                             dto.confirmedRequests()
                     );
                 })
@@ -94,19 +100,99 @@ public class EventPublicServiceImpl implements EventPublicService {
     }
 
     @Override
-    public EventFullDto getById(Long eventId, HttpServletRequest request) {
-        log.info("Публичный запрос события по id={}", eventId);
-        saveHit(request);
+    public EventFullDto getById(Long eventId, Long userId, HttpServletRequest request) {
+        log.info("Публичный запрос события по id={}, userId={}", eventId, userId);
         Events events = eventsRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Event not found"));
 
-        String uri = request.getRequestURI();
-        long views = getViewsForUris(List.of(uri)).getOrDefault(uri, 0L);
+        if (userId != null) {
+            sendUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW);
+            viewedByUser.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(eventId);
+        }
+
         EventFullDto dto = eventsMapper.toFullDto(events);
         dto.setInitiator(getUserShort(events.getInitiatorId()));
         dto.setConfirmedRequests(getConfirmedCount(eventId));
-        dto.setViews(views);
+        dto.setRating(getRatings(List.of(eventId)).getOrDefault(eventId, 0.0));
         return dto;
+    }
+
+    @Override
+    public List<EventShortDto> getRecommendations(Long userId, int maxResults) {
+        log.info("Рекомендации пользователя userId={}, maxResults={}", userId, maxResults);
+        UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
+                .setUserId(userId)
+                .setMaxResults(maxResults)
+                .build();
+        List<RecommendedEventProto> recommendations = analyzerClient.getRecommendationsForUser(request);
+        return buildRecommendationDtos(recommendations);
+    }
+
+    @Override
+    public void likeEvent(Long userId, Long eventId) {
+        log.info("Лайк от userId={} для eventId={}", userId, eventId);
+        eventsRepository.findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException("Event not found"));
+
+        Set<Long> viewed = viewedByUser.getOrDefault(userId, Set.of());
+        if (!viewed.contains(eventId)) {
+            throw new ValidationException("Нельзя лайкнуть мероприятие без предварительного просмотра");
+        }
+        sendUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
+    }
+
+    private List<EventShortDto> buildRecommendationDtos(List<RecommendedEventProto> recommendations) {
+        if (recommendations.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Double> scoreByEventId = new HashMap<>();
+        for (RecommendedEventProto r : recommendations) {
+            scoreByEventId.put(r.getEventId(), r.getScore());
+        }
+        List<Long> ids = List.copyOf(scoreByEventId.keySet());
+        List<Events> events = eventsRepository.findByIdIn(ids);
+
+        List<Long> initiatorIds = events.stream()
+                .map(Events::getInitiatorId)
+                .distinct()
+                .toList();
+        Map<Long, UserShortDto> initiatorsByIds = getUsersShortByIds(initiatorIds);
+
+        return events.stream()
+                .map(e -> {
+                    EventShortDto dto = eventsMapper.toShortDto(e);
+                    UserShortDto initiator = initiatorsByIds.getOrDefault(e.getInitiatorId(),
+                            new UserShortDto(e.getInitiatorId(), "Unknown"));
+                    return new EventShortDto(
+                            dto.id(),
+                            dto.title(),
+                            dto.annotation(),
+                            dto.category(),
+                            initiator,
+                            dto.paid(),
+                            dto.eventDate(),
+                            scoreByEventId.getOrDefault(e.getId(), 0.0),
+                            dto.confirmedRequests()
+                    );
+                })
+                .sorted(Comparator.comparingDouble(EventShortDto::rating).reversed())
+                .toList();
+    }
+
+    private Map<Long, Double> getRatings(List<Long> eventIds) {
+        Map<Long, Double> result = new HashMap<>();
+        try {
+            InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
+                    .addAllEventId(eventIds)
+                    .build();
+            List<RecommendedEventProto> scores = analyzerClient.getInteractionsCount(request);
+            for (RecommendedEventProto score : scores) {
+                result.put(score.getEventId(), score.getScore());
+            }
+        } catch (Exception e) {
+            log.warn("Не удалось получить рейтинги eventIds={}: {}", eventIds, e.getMessage());
+        }
+        return result;
     }
 
     private Map<Long, UserShortDto> getUsersShortByIds(List<Long> userIds) {
@@ -145,33 +231,22 @@ public class EventPublicServiceImpl implements EventPublicService {
         }
     }
 
-    private Map<String, Long> getViewsForUris(List<String> uris) {
-        String start = "2000-01-01 00:00:00";
-        String end = LocalDateTime.now().format(FORMATTER);
-        Map<String, Long> result = new HashMap<>();
+    private void sendUserAction(Long userId, Long eventId, ActionTypeProto type) {
         try {
-            List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
-            for (ViewStatsDto stat : stats) {
-                result.put(stat.getUri(), stat.getHits());
-            }
+            Instant now = Instant.now();
+            UserActionProto action = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(type)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(now.getEpochSecond())
+                            .setNanos(now.getNano())
+                            .build())
+                    .build();
+            collectorClient.collectUserAction(action);
         } catch (Exception e) {
-            log.warn("Не удалось получить статистику просмотров uris={}: {}", uris, e.getMessage());
-        }
-        return result;
-    }
-
-    private void saveHit(HttpServletRequest request) {
-        EndpointHitDto hit = new EndpointHitDto(
-                null,
-                "ewm-main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        );
-        try {
-            statsClient.saveHit(hit);
-        } catch (Exception e) {
-            log.error("Не удалось отправить хит в stats-сервис: {}", e.getMessage(), e);
+            log.warn("Не удалось отправить действие userId={}, eventId={}, type={}: {}",
+                    userId, eventId, type, e.getMessage());
         }
     }
 
