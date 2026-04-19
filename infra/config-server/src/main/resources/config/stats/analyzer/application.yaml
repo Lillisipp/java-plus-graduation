@@ -1,0 +1,39 @@
+server:
+  port: 0
+
+grpc:
+  server:
+    port: 9093
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: analyzer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/analyzer
+    username: analyzer
+    password: analyzer
+
+analyzer:
+  kafka:
+    user-actions-topic: stats.user-actions.v1
+    events-similarity-topic: stats.events-similarity.v1
+
+logging:
+  level:
+    "org.springframework.kafka": INFO
+    "org.springframework.orm.jpa": INFO
+    "org.springframework.transaction": INFO
+    "ru.practicum": DEBUG

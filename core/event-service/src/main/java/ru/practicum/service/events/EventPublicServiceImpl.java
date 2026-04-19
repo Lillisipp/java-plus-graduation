@@ -148,10 +148,14 @@ public class EventPublicServiceImpl implements EventPublicService {
     private Map<String, Long> getViewsForUris(List<String> uris) {
         String start = "2000-01-01 00:00:00";
         String end = LocalDateTime.now().format(FORMATTER);
-        List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
         Map<String, Long> result = new HashMap<>();
-        for (ViewStatsDto stat : stats) {
-            result.put(stat.getUri(), stat.getHits());
+        try {
+            List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
+            for (ViewStatsDto stat : stats) {
+                result.put(stat.getUri(), stat.getHits());
+            }
+        } catch (Exception e) {
+            log.warn("Не удалось получить статистику просмотров uris={}: {}", uris, e.getMessage());
         }
         return result;
     }
