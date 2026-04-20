@@ -1,0 +1,24 @@
+server:
+  port: 0
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: aggregator-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+aggregator:
+  kafka:
+    user-actions-topic: stats.user-actions.v1
+    events-similarity-topic: stats.events-similarity.v1
+
+logging:
+  level:
+    "org.springframework.kafka": INFO
+    "ru.practicum": DEBUG

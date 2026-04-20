@@ -62,7 +62,7 @@ public class EventAuthorizedServiceImpl implements EventAuthorizedService {
                     EventShortDto dto = mapper.toShortDto(e);
                     return new EventShortDto(dto.id(), dto.title(), dto.annotation(),
                             dto.category(), initiator, dto.paid(), dto.eventDate(),
-                            dto.views(), dto.confirmedRequests());
+                            dto.rating(), dto.confirmedRequests());
                 })
                 .toList();
     }

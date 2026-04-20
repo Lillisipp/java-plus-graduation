@@ -13,5 +13,10 @@ public interface EventPublicService {
                                   HttpServletRequest request);
 
     EventFullDto getById(Long eventId,
-                         HttpServletRequest request);
+                        Long userId,
+                        HttpServletRequest request);
+
+    List<EventShortDto> getRecommendations(Long userId, int maxResults);
+
+    void likeEvent(Long userId, Long eventId);
 }
